@@ -28,6 +28,17 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         run: npm run test:e2e
+      - name: Discord error notification
+        env:
+          COMMIT_HASH: ${{ github.sha }}
+        uses: rjstone/discord-webhook-notify@v2
+        if: ${{ failure() }}
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: error
+          title: Pokedex build failed
+          description: commit "$COMMIT_HASH" broke it
+          username: Pokedex
       - name: Trigger deployment
         if: ${{ github.event_name == 'push' && !contains(join(toJson(github.event.commits.*.message)), '#skip') }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
@@ -42,3 +53,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
+      - name: Discord success notification
+        uses: rjstone/discord-webhook-notify@v2
+        if: ${{ github.event_name == 'push' && !contains(join(toJson(github.event.commits.*.message)), '#skip') }}
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: info
+          title: Pokedex was deployed
+          description: Check out the new version!
+          username: Pokedex
