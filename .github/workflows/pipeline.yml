@@ -28,17 +28,6 @@ jobs:
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         run: npm run test:e2e
-      - name: Discord error notification
-        env:
-          COMMIT_HASH: ${{ github.sha }}
-        uses: rjstone/discord-webhook-notify@v2
-        if: ${{ failure() }}
-        with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-          severity: error
-          title: Pokedex build failed
-          description: commit "$COMMIT_HASH" broke it
-          username: Pokedex
       - name: Trigger deployment
         if: ${{ github.event_name == 'push' && !contains(join(toJson(github.event.commits.*.message)), '#skip') }}
         run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
@@ -54,11 +43,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
       - name: Discord success notification
-        uses: rjstone/discord-webhook-notify@v2
+        uses: sarisia/actions-status-discord@v1
         if: ${{ github.event_name == 'push' && !contains(join(toJson(github.event.commits.*.message)), '#skip') }}
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-          severity: info
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          color: 0x00c40a
           title: Pokedex was deployed
-          description: Check out the new version!
+          description: |
+            Version `${{ github.event.release.tag_name }}`
+          username: Pokedex
+      - name: Discord error notification
+        uses: sarisia/actions-status-discord@v1
+        if: ${{ failure() }}
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          color: 0xFF0000
+          title: Pokedex build failed
+          description: commit `${{ github.sha }}` broke it
           username: Pokedex
