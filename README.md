@@ -1,5 +1,7 @@
 # Full Stack open CI/CD
 
+Repository for the exercises 11.20 and 11.21 see https://github.com/raajok/cicd
+
 This repository is used for the CI/CD module of the Full stack open course
 
 Fork the repository to complete course exercises
